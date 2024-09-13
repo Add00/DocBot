@@ -65,6 +65,8 @@ async function setContents(filePath, content) {
 // Main function to execute the logic
 async function main() {
   const args = yargs(hideBin(process.argv))
+    .alias('h', 'help')
+    .alias('v', 'version')
     .command('$0 [files...]', 'Files to process', (yargs) => {
       yargs.positional('file', {
         describe: 'The files to process',
@@ -85,16 +87,18 @@ async function main() {
       default: null,
     })
     .option('base-url', {
+      alias: 'b',
       type: 'string',
       description: 'Change the base-url, defaults to localhost',
       default: 'http://127.0.0.1:11434',
     })
-    .option('api-key', {
-      type: 'string',
-      description: 'Change the api-key, assumes ollama is installed',
-      default: 'ollama',
-    })
+    // .option('api-key', {
+    //   type: 'string',
+    //   description: 'Change the api-key, assumes ollama is installed',
+    //   default: 'ollama',
+    // })
     .option('verbose', {
+      alias: 'V',
       type: 'boolean',
       description: 'Run with verbose logging',
       default: false,

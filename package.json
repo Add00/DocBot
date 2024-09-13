@@ -6,11 +6,12 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "several": "node main.js test.txt other another.txt",
-    "single": "node main.js test.txt",
-    "output": "node main.js test.txt --output out.md",
+    "several": "node main.js data/test.txt data/other data/another.txt",
+    "single": "node main.js data/test.txt",
+    "output": "node main.js data/test.txt --output data/out.md",
     "help": "node main.js --help",
-    "version": "node main.js --version"
+    "version": "node main.js --version",
+    "docbot": "node main.js"
   },
   "keywords": [],
   "author": "",
