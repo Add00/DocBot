@@ -92,13 +92,8 @@ async function main() {
       description: 'Change the base-url, defaults to localhost',
       default: 'http://127.0.0.1:11434',
     })
-    // .option('api-key', {
-    //   type: 'string',
-    //   description: 'Change the api-key, assumes ollama is installed',
-    //   default: 'ollama',
-    // })
     .option('verbose', {
-      alias: 'V',
+      alias: 'l',
       type: 'boolean',
       description: 'Run with verbose logging',
       default: false,
