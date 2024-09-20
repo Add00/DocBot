@@ -62,6 +62,16 @@ async function setContents(filePath, content) {
   }
 }
 
+function showTokenUsage(response) {
+  console.error(`
+    TOKEN USAGE:
+    ------------
+    Completion Tokens: ${response.eval_count}
+    Prompt Tokens: ${response.prompt_eval_count}
+    Total Tokens: ${response.eval_count + response.prompt_eval_count}
+    `);
+}
+
 // Main function to execute the logic
 async function main() {
   const args = yargs(hideBin(process.argv))
@@ -139,7 +149,7 @@ async function main() {
       process.stdout.write(part.message.content)
 
       if (args.tokenUsage && part.done) {
-        console.error(`\n\nTOKEN USAGE:\n------------\nCompletion Tokens: ${part.eval_count} \nPrompt Tokens: ${part.prompt_eval_count} \nTotal Tokens: ${part.eval_count+part.prompt_eval_count}\n`);
+        showTokenUsage(part);
       }
     }
   }
@@ -155,10 +165,6 @@ async function main() {
       },
     );
     
-    if (args.tokenUsage) {
-        console.error(`\nTOKEN USAGE:\n------------\nCompletion Tokens: ${response.eval_count} \nPrompt Tokens: ${response.prompt_eval_count} \nTotal Tokens: ${response.eval_count+response.prompt_eval_count}\n`);
-    }
-
     const success = setContents(args.output, response.message.content);
 
     if (success) {
@@ -166,6 +172,10 @@ async function main() {
     }
     else {
       console.error(`File could not be created: ${args.output}`);
+    }
+
+    if (args.tokenUsage) {
+      showTokenUsage(response);
     }
   }
 }
