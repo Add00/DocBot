@@ -22,7 +22,7 @@ async function checkFilePath(filePath) {
   } catch (err) {
     console.error(`File not found: ${fullPath}`);
 
-    return null;
+    process.exit(1);
   }
 }
 
@@ -118,11 +118,15 @@ async function main() {
   const fileContents = await getContents(validPaths);
   loggy.show(`Valid file paths: ${fileContents}`);
 
+  const contents = fileContents.join('\n Document this additional code using JSDoc \n');
+
+  console.log(contents);
+
   if (args.output === null) {
     const response = await ollama.chat({
       stream: true,
       model: args.model,
-      messages: [{ role: 'user', content: `Document the following code using JSDoc:\n ${fileContents[0]}` }],
+      messages: [{ role: 'user', content: `Document the following code using JSDoc:\n ${contents}` }],
     });
 
     for await (const part of response) {
@@ -133,7 +137,7 @@ async function main() {
     const response = await oraPromise(async () => {
       return await ollama.chat({
         model: args.model,
-        messages: [{ role: 'user', content: `Respond in the same language and syntax as the following code. Document the code using JSDoc, without adding any explanation only with documentation:\n ${fileContents[0]}` }],
+        messages: [{ role: 'user', content: `Document the following code using JSDoc:\n ${contents}` }],
       })
     },
       {
