@@ -98,6 +98,12 @@ async function main() {
       description: 'Run with verbose logging',
       default: false,
     })
+    .option('token-usage', {
+      alias: 't',
+      type: 'boolean',
+      description: 'Displays information about token usage',
+      default: false,
+    })
     .parse();
 
   const loggy = new Loggy(args.verbose);
@@ -131,6 +137,10 @@ async function main() {
 
     for await (const part of response) {
       process.stdout.write(part.message.content)
+
+      if (args.tokenUsage && part.done) {
+        console.error(`\n\nTOKEN USAGE:\n------------\nCompletion Tokens: ${part.eval_count} \nPrompt Tokens: ${part.prompt_eval_count} \nTotal Tokens: ${part.eval_count+part.prompt_eval_count}\n`);
+      }
     }
   }
   else {
@@ -144,6 +154,10 @@ async function main() {
         text: 'Processing...',
       },
     );
+    
+    if (args.tokenUsage) {
+        console.error(`\nTOKEN USAGE:\n------------\nCompletion Tokens: ${response.eval_count} \nPrompt Tokens: ${response.prompt_eval_count} \nTotal Tokens: ${response.eval_count+response.prompt_eval_count}\n`);
+    }
 
     const success = setContents(args.output, response.message.content);
 
