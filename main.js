@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { access, readFile, writeFile } from 'fs/promises';
+import { access, readFile, writeFile, readdir, stat } from 'fs/promises';
 import { constants } from 'fs';
-import { resolve } from 'path';
+import { resolve, join } from 'path';
 
 import { hideBin } from 'yargs/helpers';
 import { oraPromise } from 'ora';
@@ -26,9 +26,39 @@ async function checkFilePath(filePath) {
   }
 }
 
+// Recursively get all files in a directory
+async function getFilesFromFolder(dirPath) {
+  let files = [];
+  const items = await readdir(dirPath, { withFileTypes: true });
+
+  for (const item of items) {
+    const fullPath = join(dirPath, item.name);
+    if (item.isDirectory()) {
+      const nestedFiles = await getFilesFromFolder(fullPath);
+      files = files.concat(nestedFiles);
+    } else {
+      files.push(fullPath);
+    }
+  }
+
+  return files;
+}
+
 // Process all file paths and get valid paths
 async function getValidPaths(filePaths) {
-  const results = await Promise.all(filePaths.map(checkFilePath));
+  let results = [];
+
+  for (const filePath of filePaths) {
+    const fullPath = await checkFilePath(filePath);
+    const pathStat = await stat(fullPath);
+
+    if (pathStat.isDirectory()) {
+      const dirFiles = await getFilesFromFolder(fullPath);
+      results = results.concat(dirFiles);
+    } else {
+      results.push(fullPath);
+    }
+  }
 
   return results.filter(path => path !== null);
 }
@@ -116,6 +146,7 @@ async function main() {
     })
     .parse();
 
+  const ignory = new Ignory();
   const loggy = new Loggy(args.verbose);
   const ollama = new Ollama({ host: args.baseUrl });
 
@@ -164,7 +195,7 @@ async function main() {
         text: 'Processing...',
       },
     );
-    
+
     const success = setContents(args.output, response.message.content);
 
     if (success) {
