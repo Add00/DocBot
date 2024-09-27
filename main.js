@@ -114,6 +114,12 @@ async function main() {
       description: 'Displays information about token usage',
       default: false,
     })
+    .option('stream', {
+      alias: 's',
+      type: 'boolean',
+      description: 'Show the response as it generates',
+      default: false
+    })
     .parse();
 
   const loggy = new Loggy(args.verbose);
@@ -139,18 +145,29 @@ async function main() {
   console.log(contents);
 
   if (args.output === null) {
-    const response = await ollama.chat({
-      stream: true,
-      model: args.model,
-      messages: [{ role: 'user', content: `Document the following code using JSDoc:\n ${contents}` }],
-    });
-
-    for await (const part of response) {
-      process.stdout.write(part.message.content)
-
-      if (args.tokenUsage && part.done) {
-        showTokenUsage(part);
+    const response = await oraPromise(async () => {
+      return await ollama.chat({
+        stream: args.stream,
+        model: args.model,
+        messages: [{ role: 'user', content: `Document the following code using JSDoc:\n ${contents}` }],
+      })
+    },
+      {
+        text: 'Processing...',
       }
+    );
+
+    if (args.stream) {
+      for await (const part of response) {
+        process.stdout.write(part.message.content)
+
+        if (args.tokenUsage && part.done) {
+          showTokenUsage(part);
+        }
+      }
+    }
+    else {
+      console.log(response.message.content);
     }
   }
   else {
@@ -164,7 +181,7 @@ async function main() {
         text: 'Processing...',
       },
     );
-    
+
     const success = setContents(args.output, response.message.content);
 
     if (success) {
