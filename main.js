@@ -62,6 +62,16 @@ async function setContents(filePath, content) {
   }
 }
 
+function showTokenUsage(response) {
+  console.error(`
+    TOKEN USAGE:
+    ------------
+    Completion Tokens: ${response.eval_count}
+    Prompt Tokens: ${response.prompt_eval_count}
+    Total Tokens: ${response.eval_count + response.prompt_eval_count}
+    `);
+}
+
 // Main function to execute the logic
 async function main() {
   const args = yargs(hideBin(process.argv))
@@ -98,6 +108,12 @@ async function main() {
       description: 'Run with verbose logging',
       default: false,
     })
+    .option('token-usage', {
+      alias: 't',
+      type: 'boolean',
+      description: 'Displays information about token usage',
+      default: false,
+    })
     .parse();
 
   const loggy = new Loggy(args.verbose);
@@ -131,6 +147,10 @@ async function main() {
 
     for await (const part of response) {
       process.stdout.write(part.message.content)
+
+      if (args.tokenUsage && part.done) {
+        showTokenUsage(part);
+      }
     }
   }
   else {
@@ -144,7 +164,7 @@ async function main() {
         text: 'Processing...',
       },
     );
-
+    
     const success = setContents(args.output, response.message.content);
 
     if (success) {
@@ -152,6 +172,10 @@ async function main() {
     }
     else {
       console.error(`File could not be created: ${args.output}`);
+    }
+
+    if (args.tokenUsage) {
+      showTokenUsage(response);
     }
   }
 }
