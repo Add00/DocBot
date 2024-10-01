@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 
 import { access, readFile, writeFile, readdir, stat } from 'fs/promises';
-import { constants } from 'fs';
+import { constants, readFileSync, existsSync } from 'fs';
 import { resolve, join } from 'path';
+import os from 'os';
 
 import { hideBin } from 'yargs/helpers';
 import { oraPromise } from 'ora';
 import { Ollama } from 'ollama';
 import yargs from 'yargs';
+import TOML from '@ltd/j-toml';
 
 import { Loggy } from './loggy.js';
 
@@ -102,6 +104,24 @@ function showTokenUsage(response) {
     `);
 }
 
+// Function to parse TOML file
+function tomlParser() {
+  const tomlFile = join(os.homedir(), '.docbot-config.toml');
+
+  if (!existsSync(tomlFile)) {
+    return {};
+  }
+
+  try {
+    const finalPath = resolve(tomlFile);
+    const fileContents = readFileSync(finalPath, 'utf8');
+    return TOML.parse(fileContents);
+  }
+  catch (error) {
+    console.error(`Error parsing TOML file: ${error}`);
+  }
+};
+
 // Main function to execute the logic
 async function main() {
   const args = yargs(hideBin(process.argv))
@@ -153,8 +173,17 @@ async function main() {
     .parse();
 
   const ignory = new Ignory();
-  const loggy = new Loggy(args.verbose);
-  const ollama = new Ollama({ host: args.baseUrl });
+  
+  const tomlConfig = tomlParser();
+  const model =  args.model || tomlConfig.model;
+  const output =  args.output || tomlConfig.output;
+  const baseUrl =  args.baseUrl || tomlConfig.baseUrl;
+  const verbose =  args.verbose || tomlConfig.verbose;
+  const tokenUsage =  args.tokenUsage || tomlConfig.tokenUsage;
+  const stream =  args.stream || tomlConfig.stream;
+
+  const loggy = new Loggy(verbose);
+  const ollama = new Ollama({ host: baseUrl });
 
   loggy.show(args);
 
@@ -175,11 +204,11 @@ async function main() {
 
   console.log(contents);
 
-  if (args.output === null) {
+  if (output === null || output === undefined) {
     const response = await oraPromise(async () => {
       return await ollama.chat({
-        stream: args.stream,
-        model: args.model,
+        stream: stream,
+        model: model,
         messages: [{ role: 'user', content: `Document the following code using JSDoc:\n ${contents}` }],
       })
     },
@@ -188,11 +217,11 @@ async function main() {
       }
     );
 
-    if (args.stream) {
+    if (stream) {
       for await (const part of response) {
         process.stdout.write(part.message.content)
 
-        if (args.tokenUsage && part.done) {
+        if (tokenUsage && part.done) {
           showTokenUsage(part);
         }
       }
@@ -204,7 +233,7 @@ async function main() {
   else {
     const response = await oraPromise(async () => {
       return await ollama.chat({
-        model: args.model,
+        model: model,
         messages: [{ role: 'user', content: `Document the following code using JSDoc:\n ${contents}` }],
       })
     },
@@ -213,16 +242,16 @@ async function main() {
       },
     );
 
-    const success = setContents(args.output, response.message.content);
+    const success = setContents(output, response.message.content);
 
     if (success) {
-      console.log(`File created and content written to ${args.output}`);
+      console.log(`File created and content written to ${output}`);
     }
     else {
-      console.error(`File could not be created: ${args.output}`);
+      console.error(`File could not be created: ${output}`);
     }
 
-    if (args.tokenUsage) {
+    if (tokenUsage) {
       showTokenUsage(response);
     }
   }
