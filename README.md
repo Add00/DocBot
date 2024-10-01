@@ -7,6 +7,7 @@
 - **Easy to Use**: Document your code with a single command.
 - **Model Selection**: Choose different AI models for documentation.
 - **Customizable**: Change output filenames, base URLs, and enable verbose logging.
+- **TOML support**: Define a `.docbot-config.toml` file in your home directory (`~`) to define personalized configuration settings such as the default model, output file, base url, logging preferences, base API URLs, and output file path.
 
 
 ## Prerequisites
@@ -46,6 +47,20 @@ Before installing, make sure you have the following:
 | `-V, --verbose`  | Run with verbose logging                                 | `boolean` | `false`                    |
 | `-h, --help`     | Show help                                                | `boolean` |                            |
 | `-v, --version`  | Show version number                                      | `boolean` |                            |
+
+## TOML Configuration
+
+You can create a [TOML](https://toml.io/en/) config file named `.docbot-config.toml` that contains all your configuration for the tool and place it in your `home` directory.
+
+Here is an example TOML file you can use:
+
+```toml
+model = "gemma2:2b"
+baseUrl = "http://127.0.0.1:11434"
+verbose = false
+tokenUsage = false
+stream = false
+```
 
 ## Examples
 
