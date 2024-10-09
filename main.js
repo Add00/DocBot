@@ -41,6 +41,17 @@ function tomlParser() {
   }
 };
 
+function getConfigOrArgs(config, args) {
+  return {
+    model: args.model || config.model || 'gemma2:2b',
+    output: args.output || config.output,
+    baseUrl: args.baseUrl || config.baseUrl || 'http://127.0.0.1:11434',
+    verbose: args.verbose || config.verbose || false,
+    tokenUsage: args.tokenUsage || config.tokenUsage || false,
+    stream: args.stream || config.stream || false,
+  };
+}
+
 // Main function to execute the logic
 async function main() {
   const args = yargs(hideBin(process.argv))
@@ -90,14 +101,9 @@ async function main() {
       default: false
     })
     .parse();
-  
-  const tomlConfig = tomlParser();
-  const model =  args.model || tomlConfig.model;
-  const output =  args.output || tomlConfig.output;
-  const baseUrl =  args.baseUrl || tomlConfig.baseUrl;
-  const verbose =  args.verbose || tomlConfig.verbose;
-  const tokenUsage =  args.tokenUsage || tomlConfig.tokenUsage;
-  const stream =  args.stream || tomlConfig.stream;
+
+  const config = tomlParser();
+  const { model, output, baseUrl, verbose, tokenUsage, stream } = getConfigOrArgs(config, args);
 
   const loggy = new Loggy(verbose);
   const ollama = new Ollama({ host: baseUrl });
