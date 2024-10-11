@@ -52,6 +52,17 @@ function getConfigOrArgs(config, args) {
   };
 }
 
+const chat = {
+  talk: async (stream, model, contents) => {
+    return await Ollama.chat({
+      stream: stream,
+      model: model,
+      messages: [{ role: 'user', content: `Document the following code using JSDoc:\n ${contents}` }],
+    })
+  },
+  text: 'Processing...',
+};
+
 // Main function to execute the logic
 async function main() {
   const args = yargs(hideBin(process.argv))
@@ -128,17 +139,7 @@ async function main() {
   console.log(contents);
 
   if (output === null || output === undefined) {
-    const response = await oraPromise(async () => {
-      return await ollama.chat({
-        stream: stream,
-        model: model,
-        messages: [{ role: 'user', content: `Document the following code using JSDoc:\n ${contents}` }],
-      })
-    },
-      {
-        text: 'Processing...',
-      }
-    );
+    const response = await oraPromise(chat.talk(stream, model, contents), chat.text);
 
     if (stream) {
       for await (const part of response) {
@@ -154,16 +155,7 @@ async function main() {
     }
   }
   else {
-    const response = await oraPromise(async () => {
-      return await ollama.chat({
-        model: model,
-        messages: [{ role: 'user', content: `Document the following code using JSDoc:\n ${contents}` }],
-      })
-    },
-      {
-        text: 'Processing...',
-      },
-    );
+    const response = await oraPromise(chat.talk(stream, model, contents), chat.text);
 
     const success = file.setContents(output, response.message.content);
 
