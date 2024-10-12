@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
-import { access, readFile, writeFile, readdir, stat } from 'fs/promises';
-import { constants, readFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { resolve, join } from 'path';
 import os from 'os';
 
@@ -12,87 +11,7 @@ import yargs from 'yargs';
 import TOML from '@ltd/j-toml';
 
 import { Loggy } from './loggy.js';
-
-// Check file existence
-async function checkFilePath(filePath) {
-  const fullPath = resolve(filePath);
-
-  try {
-    await access(fullPath, constants.F_OK);
-
-    return fullPath;
-  } catch (err) {
-    console.error(`File not found: ${fullPath}`);
-
-    process.exit(1);
-  }
-}
-
-// Recursively get all files in a directory
-async function getFilesFromFolder(dirPath) {
-  let files = [];
-  const items = await readdir(dirPath, { withFileTypes: true });
-
-  for (const item of items) {
-    const fullPath = join(dirPath, item.name);
-    if (item.isDirectory()) {
-      const nestedFiles = await getFilesFromFolder(fullPath);
-      files = files.concat(nestedFiles);
-    } else {
-      files.push(fullPath);
-    }
-  }
-
-  return files;
-}
-
-// Process all file paths and get valid paths
-async function getValidPaths(filePaths) {
-  let results = [];
-
-  for (const filePath of filePaths) {
-    const fullPath = await checkFilePath(filePath);
-    const pathStat = await stat(fullPath);
-
-    if (pathStat.isDirectory()) {
-      const dirFiles = await getFilesFromFolder(fullPath);
-      results = results.concat(dirFiles);
-    } else {
-      results.push(fullPath);
-    }
-  }
-
-  return results.filter(path => path !== null);
-}
-
-// Function to read file contents
-async function getContents(filePaths) {
-  const readPromises = filePaths.map(async (filePath) => {
-    try {
-      const content = await readFile(filePath, 'utf-8');
-
-      return content;
-    } catch (err) {
-      console.error(`Error reading file ${filePath}: ${err.message}`);
-
-      return null;
-    }
-  });
-
-  const contents = await Promise.all(readPromises);
-  return contents.filter(content => content !== null);
-}
-
-async function setContents(filePath, content) {
-  try {
-    await writeFile(filePath, content, 'utf8');
-
-  } catch (error) {
-    console.error(`Error writing to file: ${error}`);
-
-    return null;
-  }
-}
+import * as file from './files.js';
 
 function showTokenUsage(response) {
   console.error(`
@@ -120,6 +39,28 @@ function tomlParser() {
   catch (error) {
     console.error(`Error parsing TOML file: ${error}`);
   }
+};
+
+function getConfigOrArgs(config, args) {
+  return {
+    model: args.model || config.model || 'gemma2:2b',
+    output: args.output || config.output,
+    baseUrl: args.baseUrl || config.baseUrl || 'http://127.0.0.1:11434',
+    verbose: args.verbose || config.verbose || false,
+    tokenUsage: args.tokenUsage || config.tokenUsage || false,
+    stream: args.stream || config.stream || false,
+  };
+}
+
+const chat = {
+  talk: async (stream, model, contents) => {
+    return await Ollama.chat({
+      stream: stream,
+      model: model,
+      messages: [{ role: 'user', content: `Document the following code using JSDoc:\n ${contents}` }],
+    })
+  },
+  text: 'Processing...',
 };
 
 // Main function to execute the logic
@@ -172,15 +113,8 @@ async function main() {
     })
     .parse();
 
-  const ignory = new Ignory();
-  
-  const tomlConfig = tomlParser();
-  const model =  args.model || tomlConfig.model;
-  const output =  args.output || tomlConfig.output;
-  const baseUrl =  args.baseUrl || tomlConfig.baseUrl;
-  const verbose =  args.verbose || tomlConfig.verbose;
-  const tokenUsage =  args.tokenUsage || tomlConfig.tokenUsage;
-  const stream =  args.stream || tomlConfig.stream;
+  const config = tomlParser();
+  const { model, output, baseUrl, verbose, tokenUsage, stream } = getConfigOrArgs(config, args);
 
   const loggy = new Loggy(verbose);
   const ollama = new Ollama({ host: baseUrl });
@@ -194,10 +128,10 @@ async function main() {
     process.exit(1);
   }
 
-  const validPaths = await getValidPaths(filePaths);
+  const validPaths = await file.getValidPaths(filePaths);
   loggy.show(`Valid file paths: ${validPaths}`);
 
-  const fileContents = await getContents(validPaths);
+  const fileContents = await file.getContents(validPaths);
   loggy.show(`Valid file paths: ${fileContents}`);
 
   const contents = fileContents.join('\n Document this additional code using JSDoc \n');
@@ -205,17 +139,7 @@ async function main() {
   console.log(contents);
 
   if (output === null || output === undefined) {
-    const response = await oraPromise(async () => {
-      return await ollama.chat({
-        stream: stream,
-        model: model,
-        messages: [{ role: 'user', content: `Document the following code using JSDoc:\n ${contents}` }],
-      })
-    },
-      {
-        text: 'Processing...',
-      }
-    );
+    const response = await oraPromise(chat.talk(stream, model, contents), chat.text);
 
     if (stream) {
       for await (const part of response) {
@@ -231,18 +155,9 @@ async function main() {
     }
   }
   else {
-    const response = await oraPromise(async () => {
-      return await ollama.chat({
-        model: model,
-        messages: [{ role: 'user', content: `Document the following code using JSDoc:\n ${contents}` }],
-      })
-    },
-      {
-        text: 'Processing...',
-      },
-    );
+    const response = await oraPromise(chat.talk(stream, model, contents), chat.text);
 
-    const success = setContents(output, response.message.content);
+    const success = file.setContents(output, response.message.content);
 
     if (success) {
       console.log(`File created and content written to ${output}`);
