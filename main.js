@@ -35,11 +35,10 @@ function tomlParser() {
     const finalPath = resolve(tomlFile);
     const fileContents = readFileSync(finalPath, 'utf8');
     return TOML.parse(fileContents);
-  }
-  catch (error) {
+  } catch (error) {
     console.error(`Error parsing TOML file: ${error}`);
   }
-};
+}
 
 function getConfigOrArgs(config, args) {
   return {
@@ -57,8 +56,13 @@ const chat = {
     return await Ollama.chat({
       stream: stream,
       model: model,
-      messages: [{ role: 'user', content: `Document the following code using JSDoc:\n ${contents}` }],
-    })
+      messages: [
+        {
+          role: 'user',
+          content: `Document the following code using JSDoc:\n ${contents}`,
+        },
+      ],
+    });
   },
   text: 'Processing...',
 };
@@ -72,7 +76,7 @@ async function main() {
       yargs.positional('file', {
         describe: 'The files to process',
         type: 'string',
-        demandOption: true
+        demandOption: true,
       });
     })
     .option('model', {
@@ -109,12 +113,13 @@ async function main() {
       alias: 's',
       type: 'boolean',
       description: 'Show the response as it generates',
-      default: false
+      default: false,
     })
     .parse();
 
   const config = tomlParser();
-  const { model, output, baseUrl, verbose, tokenUsage, stream } = getConfigOrArgs(config, args);
+  const { model, output, baseUrl, verbose, tokenUsage, stream } =
+    getConfigOrArgs(config, args);
 
   const loggy = new Loggy(verbose);
   const ollama = new Ollama({ host: baseUrl });
@@ -134,35 +139,40 @@ async function main() {
   const fileContents = await file.getContents(validPaths);
   loggy.show(`Valid file paths: ${fileContents}`);
 
-  const contents = fileContents.join('\n Document this additional code using JSDoc \n');
+  const contents = fileContents.join(
+    '\n Document this additional code using JSDoc \n'
+  );
 
   console.log(contents);
 
   if (output === null || output === undefined) {
-    const response = await oraPromise(chat.talk(stream, model, contents), chat.text);
+    const response = await oraPromise(
+      chat.talk(stream, model, contents),
+      chat.text
+    );
 
     if (stream) {
       for await (const part of response) {
-        process.stdout.write(part.message.content)
+        process.stdout.write(part.message.content);
 
         if (tokenUsage && part.done) {
           showTokenUsage(part);
         }
       }
-    }
-    else {
+    } else {
       console.log(response.message.content);
     }
-  }
-  else {
-    const response = await oraPromise(chat.talk(stream, model, contents), chat.text);
+  } else {
+    const response = await oraPromise(
+      chat.talk(stream, model, contents),
+      chat.text
+    );
 
     const success = file.setContents(output, response.message.content);
 
     if (success) {
       console.log(`File created and content written to ${output}`);
-    }
-    else {
+    } else {
       console.error(`File could not be created: ${output}`);
     }
 
@@ -172,7 +182,6 @@ async function main() {
   }
 }
 
-main()
-  .catch(err => {
-    console.error('Error processing files:', err);
-  });
+main().catch((err) => {
+  console.error('Error processing files:', err);
+});

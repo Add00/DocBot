@@ -9,7 +9,6 @@
 - **Customizable**: Change output filenames, base URLs, and enable verbose logging.
 - **TOML support**: Define a `.docbot-config.toml` file in your home directory (`~`) to define personalized configuration settings such as the default model, output file, base url, logging preferences, base API URLs, and output file path.
 
-
 ## Prerequisites
 
 Before installing, make sure you have the following:
@@ -25,10 +24,12 @@ Before installing, make sure you have the following:
    cd DocBot
    ```
 2. (Optional) Run Ollama with the default model:
-    ```bash
-    ollama run gemma2:2b
-    ```
-    > *Note*: This step is only necessary if you're using the gemma2:2b model. You can select a different model manually using the -m flag during usage.
+
+   ```bash
+   ollama run gemma2:2b
+   ```
+
+   > _Note_: This step is only necessary if you're using the gemma2:2b model. You can select a different model manually using the -m flag during usage.
 
 3. Run DocBot:
    ```bash
@@ -64,9 +65,9 @@ stream = false
 
 ## Examples
 
-* Basic usage with default settings: `npm run docbot -- myFile.js`
-* Specify a custom model and output file: `npm run docbot -- myFile.js -m llama2 -o docs.md`
-* Run with verbose logging: `npm run docbot -- myFile.js -V`
+- Basic usage with default settings: `npm run docbot -- myFile.js`
+- Specify a custom model and output file: `npm run docbot -- myFile.js -m llama2 -o docs.md`
+- Run with verbose logging: `npm run docbot -- myFile.js -V`
 
 ## Licence
 

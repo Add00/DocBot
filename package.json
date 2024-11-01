@@ -12,7 +12,11 @@
     "stream": "node main.js data/test.txt --stream",
     "help": "node main.js --help",
     "version": "node main.js --version",
-    "docbot": "node main.js"
+    "docbot": "node main.js",
+    "format": "prettier --write .",
+    "format-check": "prettier --check .",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "keywords": [],
   "author": "",
@@ -22,5 +26,11 @@
     "ollama": "^0.5.9",
     "ora": "^8.1.0",
     "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.14.0",
+    "eslint": "^9.14.0",
+    "globals": "^15.11.0",
+    "prettier": "3.3.3"
   }
 }
