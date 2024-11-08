@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "vitest",
+    "coverage": "vitest run --coverage",
     "several": "node main.js data/test.txt data/other data/another.txt",
     "single": "node main.js data/test.txt",
     "output": "node main.js data/test.txt --output data/out.md",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.14.0",
+    "@vitest/coverage-v8": "^2.1.4",
     "eslint": "^9.14.0",
     "globals": "^15.11.0",
     "prettier": "3.3.3",

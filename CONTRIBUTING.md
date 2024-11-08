@@ -29,6 +29,8 @@ All types of contributions are encouraged and valued. See the [Table of Contents
       - [How Do I Submit a Good Enhancement Suggestion?](#how-do-i-submit-a-good-enhancement-suggestion)
     - [Formatting](#formatting)
     - [Linting](#linting)
+  - [Running Tests](#running-tests)
+    - [Writing Tests](#writing-tests)
   - [Attribution](#attribution)
 
 ## I Have a Question
@@ -155,6 +157,34 @@ Check for Issues: This will analyze the code for style issues and potential erro
 
 Automatically Fix Issues: This will attempt to fix any fixable issues automatically.
 `npm run lint:fix`
+
+## Running Tests
+
+To ensure the integrity of the code and contribute successfully, we use Vitest for testing. Follow these steps to run the tests locally:
+
+Run Tests: To run the tests and watch for changes in the project, execute the following command:
+`npm run test`
+
+### Writing Tests
+
+1. Place your test files in the `/tests` directory and end the file name with `test.js` a complete example being `tests/example.test.js`.
+   
+2. Test Structure: Each test should be structured using Vitest's `describe` and `it` blocks for clarity and organization.
+
+```js
+import { describe, it, expect } from 'vitest';
+import { sum } from '../utils.js';
+
+describe('sum function', () => {
+  it('should return the correct sum of two numbers', () => {
+    expect(sum(1, 2)).toBe(3);
+  });
+
+  it('should return a negative number when summing negative values', () => {
+    expect(sum(-1, -2)).toBe(-3);
+  });
+});
+```
 
 ## Attribution
 
