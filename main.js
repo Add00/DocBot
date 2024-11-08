@@ -1,71 +1,16 @@
 #!/usr/bin/env node
 
-import { readFileSync, existsSync } from 'fs';
-import { resolve, join } from 'path';
-import os from 'os';
+import process from 'process';
 
 import { hideBin } from 'yargs/helpers';
 import { oraPromise } from 'ora';
 import { Ollama } from 'ollama';
 import yargs from 'yargs';
-import TOML from '@ltd/j-toml';
 
+import { Chat } from './chat.js';
 import { Loggy } from './loggy.js';
 import * as file from './files.js';
-
-function showTokenUsage(response) {
-  console.error(`
-    TOKEN USAGE:
-    ------------
-    Completion Tokens: ${response.eval_count}
-    Prompt Tokens: ${response.prompt_eval_count}
-    Total Tokens: ${response.eval_count + response.prompt_eval_count}
-    `);
-}
-
-// Function to parse TOML file
-function tomlParser() {
-  const tomlFile = join(os.homedir(), '.docbot-config.toml');
-
-  if (!existsSync(tomlFile)) {
-    return {};
-  }
-
-  try {
-    const finalPath = resolve(tomlFile);
-    const fileContents = readFileSync(finalPath, 'utf8');
-    return TOML.parse(fileContents);
-  } catch (error) {
-    console.error(`Error parsing TOML file: ${error}`);
-  }
-}
-
-function getConfigOrArgs(config, args) {
-  return {
-    model: args.model || config.model || 'gemma2:2b',
-    output: args.output || config.output,
-    baseUrl: args.baseUrl || config.baseUrl || 'http://127.0.0.1:11434',
-    verbose: args.verbose || config.verbose || false,
-    tokenUsage: args.tokenUsage || config.tokenUsage || false,
-    stream: args.stream || config.stream || false,
-  };
-}
-
-const chat = {
-  talk: async (stream, model, contents) => {
-    return await Ollama.chat({
-      stream: stream,
-      model: model,
-      messages: [
-        {
-          role: 'user',
-          content: `Document the following code using JSDoc:\n ${contents}`,
-        },
-      ],
-    });
-  },
-  text: 'Processing...',
-};
+import * as utils from './utils.js';
 
 // Main function to execute the logic
 async function main() {
@@ -117,12 +62,19 @@ async function main() {
     })
     .parse();
 
-  const config = tomlParser();
-  const { model, output, baseUrl, verbose, tokenUsage, stream } =
-    getConfigOrArgs(config, args);
+  const config = utils.tomlParser();
+  const { 
+    model, 
+    output, 
+    baseUrl, 
+    verbose, 
+    tokenUsage, 
+    stream, 
+  } = utils.getConfigOrArgs(config, args);
 
   const loggy = new Loggy(verbose);
   const ollama = new Ollama({ host: baseUrl });
+  const chat = new Chat(ollama);
 
   loggy.show(args);
 
@@ -156,7 +108,7 @@ async function main() {
         process.stdout.write(part.message.content);
 
         if (tokenUsage && part.done) {
-          showTokenUsage(part);
+          utils.showTokenUsage(part);
         }
       }
     } else {
@@ -177,7 +129,7 @@ async function main() {
     }
 
     if (tokenUsage) {
-      showTokenUsage(response);
+      utils.showTokenUsage(response);
     }
   }
 }

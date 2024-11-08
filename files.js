@@ -1,6 +1,7 @@
 import { access, readFile, writeFile, readdir, stat } from 'fs/promises';
-import { constants } from 'fs';
 import { resolve, join } from 'path';
+import { constants } from 'fs';
+import process from 'process';
 
 // Check file existence
 async function checkFilePath(filePath) {
@@ -10,7 +11,7 @@ async function checkFilePath(filePath) {
     await access(fullPath, constants.F_OK);
 
     return fullPath;
-  } catch (err) {
+  } catch (_) {
     console.error(`File not found: ${fullPath}`);
 
     process.exit(1);
