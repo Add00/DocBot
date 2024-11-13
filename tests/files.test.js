@@ -3,6 +3,7 @@ import { access, readFile, writeFile, readdir, stat } from 'fs/promises';
 import { constants } from 'fs';
 import process from 'process';
 import { checkFilePath, getFilesFromFolder, getValidPaths, getContents, setContents } from '../files.js'; 
+import path from 'path';
 
 vi.mock('fs/promises');
 
@@ -14,7 +15,7 @@ describe('File Utilities', () => {
   describe('checkFilePath', () => {
     it('should return the full path if the file exists', async () => {
       access.mockResolvedValueOnce();
-      const filePath = '/path/to/file.txt';
+      const filePath = path.resolve('/path/to/file.txt');
       const result = await checkFilePath(filePath);
       expect(result).toBe(filePath);
       expect(access).toHaveBeenCalledWith(filePath, constants.F_OK);
@@ -22,7 +23,7 @@ describe('File Utilities', () => {
 
     it('should exit with code 1 if the file does not exist', async () => {
       access.mockRejectedValueOnce(new Error('File not found'));
-      const filePath = '/path/to/nonexistent.txt';
+      const filePath = path.resolve('/path/to/nonexistent.txt');
 
       // Mock process.exit to prevent actual exit during the test
       const exitMock = vi.spyOn(process, 'exit').mockImplementation(() => {});
@@ -43,11 +44,11 @@ describe('File Utilities', () => {
       ]);
       readdir.mockResolvedValueOnce([{ name: 'file2.txt', isDirectory: () => false }]);
 
-      const dirPath = '/path/to/dir';
+      const dirPath = path.resolve('/path/to/dir');
       const result = await getFilesFromFolder(dirPath);
       expect(result).toEqual([
-        '/path/to/dir/file1.txt',
-        '/path/to/dir/subdir/file2.txt'
+        path.resolve('/path/to/dir/file1.txt'),
+        path.resolve('/path/to/dir/subdir/file2.txt')
       ]);
     });
   });
@@ -62,8 +63,8 @@ describe('File Utilities', () => {
       const filePaths = ['/path/to/file.txt', '/path/to/dir'];
       const result = await getValidPaths(filePaths);
       expect(result).toEqual([
-        '/path/to/file.txt',
-        '/path/to/dir/nestedFile.txt',
+        path.resolve('/path/to/file.txt'),
+        path.resolve('/path/to/dir/nestedFile.txt'),
       ]);
     });
   });
