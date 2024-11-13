@@ -1,8 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
+import process from 'process';
 
-import { showTokenUsage, tomlParser, getConfigOrArgs } from '../utils.js';
+import { hideBin } from 'yargs/helpers';
+
+import { showTokenUsage, tomlParser, getConfigOrArgs, parseArgs } from '../utils.js';
 
 // Mock modules
 vi.mock('fs');
@@ -78,5 +81,60 @@ describe('getConfigOrArgs', () => {
     expect(result.verbose).toBe(false);
     expect(result.tokenUsage).toBe(false);
     expect(result.stream).toBe(false);
+  });
+});
+
+
+describe('parseArgs', () => {
+  it('should parse default options correctly', () => {
+    const args = parseArgs(hideBin(process.argv));
+
+    expect(args.model).toBe('gemma2:2b');
+    expect(args.output).toBe(null);
+    expect(args['base-url']).toBe('http://127.0.0.1:11434');
+    expect(args.verbose).toBe(false);
+    expect(args['token-usage']).toBe(false);
+    expect(args.stream).toBe(false);
+  });
+
+  it('should parse command line arguments correctly', () => {
+    const argv = hideBin(['node', 'script.js', '--model', 'customModel', '--output', 'result.txt', '--verbose']);
+    console.log(argv);
+    const args = parseArgs(argv);
+    console.log(args);
+
+    expect(args.model).toBe('customModel');
+    expect(args.output).toBe('result.txt');
+    expect(args.verbose).toBe(true);
+  });
+
+  it('should handle positional file arguments', () => {
+    const argv = hideBin(['node', 'script.js', 'file1.txt', 'file2.txt']);
+    console.log(argv);
+    const args = parseArgs(argv);
+    console.log(args);
+
+    expect(args.files).toEqual(['file1.txt', 'file2.txt']);
+  });
+
+  it('should parse all options correctly when provided in args', () => {
+    const argv = hideBin([
+      'node', 
+      'script.js', 
+      '--model', 'testModel', 
+      '--output', 'output.txt', 
+      '--base-url', 'http://localhost:3000', 
+      '--verbose', 
+      '--token-usage', 
+      '--stream'
+    ]);
+    const args = parseArgs(argv);
+
+    expect(args.model).toBe('testModel');
+    expect(args.output).toBe('output.txt');
+    expect(args['base-url']).toBe('http://localhost:3000');
+    expect(args.verbose).toBe(true);
+    expect(args['token-usage']).toBe(true);
+    expect(args.stream).toBe(true);
   });
 });

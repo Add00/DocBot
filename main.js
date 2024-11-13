@@ -2,10 +2,8 @@
 
 import process from 'process';
 
-import { hideBin } from 'yargs/helpers';
 import { oraPromise } from 'ora';
 import { Ollama } from 'ollama';
-import yargs from 'yargs';
 
 import { Chat } from './chat.js';
 import { Loggy } from './loggy.js';
@@ -14,53 +12,7 @@ import * as utils from './utils.js';
 
 // Main function to execute the logic
 async function main() {
-  const args = yargs(hideBin(process.argv))
-    .alias('h', 'help')
-    .alias('v', 'version')
-    .command('$0 [files...]', 'Files to process', (yargs) => {
-      yargs.positional('file', {
-        describe: 'The files to process',
-        type: 'string',
-        demandOption: true,
-      });
-    })
-    .option('model', {
-      alias: 'm',
-      type: 'string',
-      description: 'Select a different model, make sure that it is available',
-      default: 'gemma2:2b',
-    })
-    .option('output', {
-      alias: 'o',
-      type: 'string',
-      description: 'Change the name of the output file',
-      default: null,
-    })
-    .option('base-url', {
-      alias: 'b',
-      type: 'string',
-      description: 'Change the base-url, defaults to localhost',
-      default: 'http://127.0.0.1:11434',
-    })
-    .option('verbose', {
-      alias: 'l',
-      type: 'boolean',
-      description: 'Run with verbose logging',
-      default: false,
-    })
-    .option('token-usage', {
-      alias: 't',
-      type: 'boolean',
-      description: 'Displays information about token usage',
-      default: false,
-    })
-    .option('stream', {
-      alias: 's',
-      type: 'boolean',
-      description: 'Show the response as it generates',
-      default: false,
-    })
-    .parse();
+  const args = utils.parseArgs();
 
   const config = utils.tomlParser();
   const { 

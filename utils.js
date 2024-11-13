@@ -1,9 +1,11 @@
 import os from 'os';
-
+import process from 'process';
 import { readFileSync, existsSync } from 'fs';
 import { resolve, join } from 'path';
 
+import { hideBin } from 'yargs/helpers';
 import TOML from '@ltd/j-toml';
+import yargs from 'yargs';
 
 function showTokenUsage(response) {
     console.error(`
@@ -43,8 +45,59 @@ function getConfigOrArgs(config, args) {
     };
 }
 
+function parseArgs(args = hideBin(process.argv)) {
+    return yargs(args)
+    .alias('h', 'help')
+    .alias('v', 'version')
+    .command('$0 [files...]', 'Files to process', (yargs) => {
+      yargs.positional('file', {
+        describe: 'The files to process',
+        type: 'string',
+        demandOption: true,
+      });
+    })
+    .option('model', {
+      alias: 'm',
+      type: 'string',
+      description: 'Select a different model, make sure that it is available',
+      default: 'gemma2:2b',
+    })
+    .option('output', {
+      alias: 'o',
+      type: 'string',
+      description: 'Change the name of the output file',
+      default: null,
+    })
+    .option('base-url', {
+      alias: 'b',
+      type: 'string',
+      description: 'Change the base-url, defaults to localhost',
+      default: 'http://127.0.0.1:11434',
+    })
+    .option('verbose', {
+      alias: 'l',
+      type: 'boolean',
+      description: 'Run with verbose logging',
+      default: false,
+    })
+    .option('token-usage', {
+      alias: 't',
+      type: 'boolean',
+      description: 'Displays information about token usage',
+      default: false,
+    })
+    .option('stream', {
+      alias: 's',
+      type: 'boolean',
+      description: 'Show the response as it generates',
+      default: false,
+    })
+    .parse();
+}
+
 export {
     showTokenUsage,
     tomlParser,
     getConfigOrArgs,
+    parseArgs,
 }
