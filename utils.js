@@ -46,7 +46,7 @@ function getConfigOrArgs(config, args) {
 }
 
 function parseArgs(args = hideBin(process.argv)) {
-    yargs(args)
+    return yargs(args)
     .alias('h', 'help')
     .alias('v', 'version')
     .command('$0 [files...]', 'Files to process', (yargs) => {

@@ -99,9 +99,7 @@ describe('parseArgs', () => {
 
   it('should parse command line arguments correctly', () => {
     const argv = hideBin(['node', 'script.js', '--model', 'customModel', '--output', 'result.txt', '--verbose']);
-    console.log(argv);
     const args = parseArgs(argv);
-    console.log(args);
 
     expect(args.model).toBe('customModel');
     expect(args.output).toBe('result.txt');
@@ -110,9 +108,7 @@ describe('parseArgs', () => {
 
   it('should handle positional file arguments', () => {
     const argv = hideBin(['node', 'script.js', 'file1.txt', 'file2.txt']);
-    console.log(argv);
     const args = parseArgs(argv);
-    console.log(args);
 
     expect(args.files).toEqual(['file1.txt', 'file2.txt']);
   });
