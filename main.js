@@ -11,7 +11,7 @@ import * as file from './files.js';
 import * as utils from './utils.js';
 
 // Main function to execute the logic
-async function main() {
+export async function main() {
   const args = utils.parseArgs();
 
   const config = utils.tomlParser();
@@ -86,6 +86,6 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error('Error processing files:', err);
-});
+// main().catch((err) => {
+//   console.error('Error processing files:', err);
+// });

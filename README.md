@@ -18,6 +18,12 @@ Before installing, make sure you have the following:
 
 ## Installation
 
+### Via npm
+
+`npm i docbot` to install as a project dependency 
+
+### Via git
+
 1. Clone the repository:
    ```bash
    git clone git@github.com:Add00/DocBot.git
